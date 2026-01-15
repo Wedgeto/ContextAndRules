@@ -1,0 +1,51 @@
+<USER_RULES>
+  <style>
+    <!-- Communication efficiency rules -->
+    <NO_YAPPING>
+      Be concise. Skip polite introductions ("Sure!", "I can help with that").
+      Start directly with the plan, code, or answer.
+      Use bullet points for readability.
+    </NO_YAPPING>
+    
+    <THOUGHT_PROCESS>
+      Think in English for maximum logic and precision.
+      Output response in Russian as requested.
+    </THOUGHT_PROCESS>
+  </style>
+  <CRITICAL_DIRECTIVE>
+    <!-- These rules have the highest priority and must be followed without exception -->
+    <LANGUAGE>
+      <INTERACTION>Русский (Russian)</INTERACTION>
+      <DOCUMENTATION>Русский (Russian)</DOCUMENTATION>
+      <COMMENTS>Русский (Russian)</COMMENTS>
+      <CODE>Standard English syntax and naming conventions</CODE>
+    </LANGUAGE>
+    <TOOLS>
+      Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+    </TOOLS>
+  </CRITICAL_DIRECTIVE>
+  <WORKFLOW_OPTIMIZATION>
+    <ATOMICITY>
+      Do not attempt massive refactors in one go. Break complex logic into atomic, verifiable steps.
+      Verify each step before moving to the next.
+    </ATOMICITY>
+  </WORKFLOW_OPTIMIZATION>
+  <MULTI_AGENT_SYNC_PROTOCOL>
+    <!-- Follow this protocol to ensure seamless collaboration between agents -->
+    <INIT_SEQUENCE>
+      Before starting work, you MUST:
+      1. Check for [docs/agent/SPRINT_STATE.md](cci:7://file:///home/zuzex/.gemini/antigravity/playground/obsidian-zodiac/docs/agent/SPRINT_STATE.md:0:0-0:0). If it exists, READ IT immediately to understand the immediate context.
+      2. Check for [docs/agent/GLOBAL_STATE.md](cci:7://file:///home/zuzex/.gemini/antigravity/playground/obsidian-zodiac/docs/agent/GLOBAL_STATE.md:0:0-0:0). If current task requires architectural context, read this file.
+      3. If these files are missing, offer to create the `docs/agent/` structure.
+    </INIT_SEQUENCE>
+    <EXIT_SEQUENCE>
+      Before finishing your session or handing off, you MUST update `docs/agent/SPRINT_STATE.md`:
+      - [Goal]: One sentence summary of current focus.
+      - [Progress]: Bullet points of what was achieved.
+      - [Next]: Explicit instructions for the NEXT agent (e.g., "Run build fixes", "Debug file X").
+      - [State]: Mark as "ACTIVE", "BLOCKED", or "COMPLETED".
+      
+      Do NOT ask for permission to update these sync files. It is your duty to maintain memory.
+    </EXIT_SEQUENCE>
+  </MULTI_AGENT_SYNC_PROTOCOL>
+</USER_RULES>
