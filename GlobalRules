@@ -1,5 +1,82 @@
-  <ERROR_PROTOCOL>
-    When a tool/command fails, you MUST analyze the stderr output.
-    Quote the specific error message in your thought process before re-trying.
-    Blind retries without reading the error are forbidden.
-  </ERROR_PROTOCOL>
+<USER_RULES>
+  <style>
+    <!-- Communication efficiency rules -->
+    <NO_YAPPING>
+      Be concise. Skip polite introductions ("Sure!", "I can help with that").
+      Start directly with the plan, code, or answer.
+      Use bullet points for readability.
+    </NO_YAPPING>
+    
+    <THOUGHT_PROCESS>
+      Think in English for maximum logic and precision.
+      Output response in Russian as requested.
+    </THOUGHT_PROCESS>
+  </style>
+  
+  <CRITICAL_DIRECTIVE>
+    <!-- These rules have the highest priority and must be followed without exception -->
+    <LANGUAGE>
+      <INTERACTION>Русский (Russian)</INTERACTION>
+      <DOCUMENTATION>Русский (Russian)</DOCUMENTATION>
+      <COMMENTS>Русский (Russian)</COMMENTS>
+      <CODE>Standard English syntax and naming conventions</CODE>
+    </LANGUAGE>
+    <TOOLS>
+      Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+    </TOOLS>
+  </CRITICAL_DIRECTIVE>
+  <WORKFLOW_OPTIMIZATION>
+    <ATOMICITY>
+      Do not attempt massive refactors in one go. Break complex logic into atomic, verifiable steps.
+      Verify each step before moving to the next.
+    </ATOMICITY>
+  </WORKFLOW_OPTIMIZATION>
+  <SAFETY_AND_ACCURACY>
+    <SURGEON_RULE>
+      NEVER modify a file without reading it first (`view_file`) in the current turn.
+      Blind edits cause regressions. Trust only what you see, not what you remember.
+    </SURGEON_RULE>
+
+    <ERROR_PROTOCOL>
+      When a tool/command fails, you MUST analyze the stderr output.
+      Quote the specific error message in your thought process before re-trying.
+      Blind retries without reading the error are forbidden.
+    </ERROR_PROTOCOL>
+
+    <STOP_LOSS>
+      If a specific tool/command fails 2 times in a row, PAUSE.
+      Do not retry blindly. Consult defaults/docs or ask the User.
+      Avoid "trial and error" loops.
+    </STOP_LOSS>
+    
+    <PROOF_OF_WORK>
+      Do not mark a task as COMPLETED without verification.
+      Run the build/test or check the specific condition (grep) to prove success.
+      If verifying UI, ask User to confirm visually.
+    </PROOF_OF_WORK>
+  </SAFETY_AND_ACCURACY>
+  <MULTI_AGENT_SYNC_PROTOCOL>
+    <!-- Follow this protocol to ensure seamless collaboration between agents -->
+    <INIT_SEQUENCE>
+      Before starting work, you MUST:
+      1. Check for docs/agent/SPRINT_STATE.md. If it exists, READ IT immediately to understand the immediate context.
+      2. Check for docs/agent/GLOBAL_STATE.md. If current task requires architectural context, read this file.
+      3. If these files are missing, offer to create the `docs/agent/` structure.
+    </INIT_SEQUENCE>
+    
+    <EXIT_SEQUENCE>
+      Before finishing your session or handing off:
+      
+      1. UPDATE `docs/agent/SPRINT_STATE.md` (ALWAYS):
+         - [Goal]: One sentence summary of current focus.
+         - [Progress]: Bullet points of what was achieved.
+         - [Next]: Explicit instructions for the NEXT agent (e.g., "Run build fixes", "Debug file X").
+         - [State]: Mark as "ACTIVE", "BLOCKED", or "COMPLETED".
+      2. UPDATE `docs/agent/GLOBAL_STATE.md` (CONDITIONAL):
+         - Update ONLY if significant architectural changes, new tech stack decisions, or roadmap pivots occurred.
+         - Do not pollute Global State with daily tasks.
+      
+      Do NOT ask for permission to update these sync files. It is your duty to maintain memory.
+    </EXIT_SEQUENCE>
+  </MULTI_AGENT_SYNC_PROTOCOL>
+</USER_RULES>
