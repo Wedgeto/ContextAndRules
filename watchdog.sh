@@ -34,38 +34,39 @@ process_outbox() {
 
         TASK_ID=$(parse_yaml "task_id" "$TASK_FILE")
         TOOL=$(parse_yaml "target_tool" "$TASK_FILE")
-        ACTION=$(parse_yaml "action" "$TASK_FILE")
-        INPUT_TARGET=$(parse_yaml "input" "$TASK_FILE")
-        RULE=$(parse_yaml "compression_rule" "$TASK_FILE")
+
+        if [[ "$TOOL" == "JULES" ]]; then
+            # Do nothing. Leave the file in outbox for Jules to read directly from repo.
+            continue
+        fi
 
         if [[ "$TOOL" == "GEMINI_CLI" ]]; then
             echo "[-] Tool: DATA_MINER. Task ID: $TASK_ID"
+            ACTION=$(parse_yaml "action" "$TASK_FILE")
+            INPUT_TARGET=$(parse_yaml "input" "$TASK_FILE")
+            RULE=$(parse_yaml "compression_rule" "$TASK_FILE")
             PROMPT="Role: DATA_MINER. Goal: $ACTION. Constraints: $RULE. Context: $([ -f "$INPUT_TARGET" ] && tail -n 500 "$INPUT_TARGET" || echo "No file context"). Output: Concise YAML."
             
             echo "[-] Executing Gemini CLI... (Headless)"
             RESULT=$(gemini -p "$PROMPT")
-        else
-            echo "[!] MANUAL SURGERY REQUIRED ($TOOL)."
-            echo "[*] Please use: docs/agent/exchange/REPORTING_GUIDE.md"
-            RESULT="Skipped: Awaiting manual Jules UI execution. Manifest moved to archive."
+
+            # Finalize Response in Inbox
+            OUT_FILE="$INBOX/result_${TASK_ID}.yaml"
+            {
+                echo "---"
+                echo "task_id: \"$TASK_ID\""
+                echo "status: \"success\""
+                echo "summary: |"
+                echo "$RESULT" | sed 's/^/  /'
+            } > "$OUT_FILE"
+
+            echo "[v] Entry processed: $OUT_FILE"
+            
+            # Cleanup only for GEMINI_CLI
+            mv "$TASK_FILE" "$ARCHIVE/"
+            echo "[*] Manifest $TASK_ID moved to archive."
+            echo "---------------------------------------------------"
         fi
-
-        # Finalize Response in Inbox
-        OUT_FILE="$INBOX/result_${TASK_ID}.yaml"
-        {
-            echo "---"
-            echo "task_id: \"$TASK_ID\""
-            echo "status: \"completed_or_skipped\""
-            echo "summary: |"
-            echo "$RESULT" | sed 's/^/  /'
-        } > "$OUT_FILE"
-
-        echo "[v] Entry processed: $OUT_FILE"
-
-        # Cleanup
-        mv "$TASK_FILE" "$ARCHIVE/"
-        echo "[*] Manifest $TASK_ID moved to archive."
-        echo "---------------------------------------------------"
     done
 }
 
