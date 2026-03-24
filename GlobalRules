@@ -24,9 +24,9 @@
     </TOOLS>
   </CRITICAL_DIRECTIVES>
 
-  <SWARM_TOPOLOGY_V5_6>
+  <SWARM_TOPOLOGY_V5_7>
     <SESSION_INIT>
-      Read [docs/agent/_core/GLOBAL_STATE.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/GLOBAL_STATE.md:0:0-0:0) and [docs/agent/sprints/current.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/sprints/current.md:0:0-0:0).
+      Read [docs/agent/_core/GLOBAL_STATE.md](file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/GLOBAL_STATE.md) and [docs/agent/sprints/current.md](file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/sprints/current.md).
       Assume MASTER_CODER role by default.
     </SESSION_INIT>
 
@@ -46,10 +46,10 @@
     <CODE_SURGEON>
       - TOOL: Google Jules (Manual UI via jules.google.com).
       - ROLE: Isolated Refactoring & Implementation.
-      - TRIGGER: Activated via `exchange/outbox/` YAML manifest + Master's Detailed Prompt in chat.
+      - TRIGGER: Reads `docs/agent/exchange/outbox/task_[ID].yaml` directly from repository.
       - BATCH_SURGERY: Maximize quota efficiency. Batch multiple complex file changes into a single session. Avoid single-file or <100 LOC tasks.
     </CODE_SURGEON>
-  </SWARM_TOPOLOGY_V5_6>
+  </SWARM_TOPOLOGY_V5_7>
 
   <MULTI_AGENT_SYNC_PROTOCOL>
     <DATA_BUS_STRUCTURE>
@@ -60,11 +60,12 @@
     </DATA_BUS_STRUCTURE>
     
     <DELEGATION_CONTROLS>
-      1. Master defines the problem (Research or Surgery).
-      2. Master creates `outbox/task_[ID].yaml`. 
-      3. For CODE_SURGEON: Master provides the "Surgery Briefing" text in the chat for the User.
-      4. Master PAUSES and explicitly waits for `inbox/result_[ID].yaml`.
-      5. Master consumes data, applies changes, deletes inbox/outbox files, and proceeds.
+      1. Master defines the problem in `outbox/task_[ID].yaml`. 
+      2. Master PUSHES manifest to Git.
+      3. User triggers Jules UI: "Execute task_[ID].yaml from the repository".
+      4. Jules implements, writes `inbox/result_[ID].yaml`, and PUSHES code + report to Git.
+      5. User PULLS changes.
+      6. Master consumes data, applies changes, deletes inbox/outbox files, and proceeds.
     </DELEGATION_CONTROLS>
 
     <TASK_MANIFEST_TEMPLATE>
