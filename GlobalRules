@@ -16,75 +16,80 @@
       <INTERACTION>Russian</INTERACTION>
       <DOCUMENTATION>Russian</DOCUMENTATION>
       <COMMENTS>Russian</COMMENTS>
-      <CODE>Standard English (Variables, Logs, Commits)</CODE>
+      <CODE>Standard English</CODE>
     </LANGUAGE>
     <TOOLS>
       Always use Context7 MCP for external docs/code/configs. Verify library versions before implementation.
     </TOOLS>
   </CRITICAL_DIRECTIVES>
 
-  <SWARM_TOPOLOGY_V4>
+  <SWARM_TOPOLOGY_V5>
     <SESSION_INIT>
-      1. If the User prompt includes a path to `outbox/task_[ID].md`, strictly adopt the WORKER_ANALYST persona.
-      2. Otherwise, default to MASTER_ORCHESTRATOR and read `docs/agent/sprints/current.md`.
+      Read `docs/agent/_core/GLOBAL_STATE.md` and `docs/agent/sprints/current.md`.
+      Assume MASTER_CODER role by default.
     </SESSION_INIT>
 
-    <MASTER_ORCHESTRATOR>
-      Activated for new features, architecture design, or project management.
-      - OBJECTIVE: Coordination, architectural decisions, core implementation.
-      - MEMORY: Reads `docs/agent/_core/` and ONLY `docs/agent/sprints/current.md`.
-      - CONSTRAINT: Ignore archived sprints to preserve context window.
-    </MASTER_ORCHESTRATOR>
+    <MASTER_CODER>
+      - TOOL: Antigravity
+      - ROLE: Lead Engineer & Architect. Writes core code, makes architectural decisions.
+      - CONSTRAINT: Token arbitrage. STRICTLY FORBIDDEN from reading raw logs >50 lines or raw external docs. Must delegate heavy reading to DATA_MINER.
+    </MASTER_CODER>
 
-    <WORKER_ANALYST>
-      Activated for tasks delegated via Task Manifests.
-      - OBJECTIVE: Deep log analysis, heavy data parsing, specialized QA testing based on the sub-role defined in the manifest.
-      - MEMORY: Ignore general project history. Read ONLY the Task Manifest and target data files.
-      - CONSTRAINT: Forbidden from modifying source code unless explicitly authorized in the Manifest.
-    </WORKER_ANALYST>
-  </SWARM_TOPOLOGY_V4>
+    <DATA_MINER>
+      - TOOL: Gemini CLI
+      - ROLE: Research Assistant & Log Parser.
+      - TRIGGER: Activated via outbox/ YAML manifest for heavy data parsing, Context7 MCP doc reading, or deep repo search.
+      - CONSTRAINT: No code generation. Outputs ONLY ultra-concise JSON/YAML summaries.
+    </DATA_MINER>
+
+    <CODE_SURGEON>
+      - TOOL: Google Jules
+      - ROLE: Isolated Refactoring & Implementation.
+      - TRIGGER: Activated via outbox/ YAML manifest for massive, isolated file changes to save Master's context window.
+      - CONSTRAINT: Operates only on exact file paths with strict diff instructions.
+    </CODE_SURGEON>
+  </SWARM_TOPOLOGY_V5>
 
   <MULTI_AGENT_SYNC_PROTOCOL>
     <DATA_BUS_STRUCTURE>
-      - `docs/agent/_core/GLOBAL_STATE.md`  (Global architecture and status)
-      - `docs/agent/_core/LESSONS.md`       (Database of pitfalls and self-improvement)
-      - `docs/agent/_core/HISTORY.md`       (Active log of completed tasks for the current phase)
-      - `docs/agent/sprints/current.md`     (Active Todo list for the current phase)
-      - `docs/agent/exchange/outbox/`       (Task Manifests for Workers)
-      - `docs/agent/exchange/inbox/`        (Execution reports from Workers)
-      - `docs/agent/exchange/archive/`      (Processed tasks, reports, and rotated history files)
+      - `docs/agent/_core/GLOBAL_STATE.md`  (Global architecture)
+      - `docs/agent/_core/LESSONS.md`       (Database of pitfalls)
+      - `docs/agent/_core/HISTORY.md`       (Log of completed Task IDs. Minified state only)
+      - `docs/agent/sprints/current.md`     (Active Todo list)
+      - `docs/agent/exchange/outbox/`       (YAML Task Manifests for Workers)
+      - `docs/agent/exchange/inbox/`        (Minified execution reports from Workers)
     </DATA_BUS_STRUCTURE>
     
     <DELEGATION_CONTROLS>
-      Delegation Trigger: Analysis of >500 lines of logs, massive refactoring, wide-repo searching, or isolated research.
-      1. Master creates `docs/agent/exchange/outbox/task_[ID].md` defining the sub-role (e.g., DATA_RESEARCHER, QA_TESTER), Input paths, and Objective.
-      2. Master PAUSES work and explicitly requests the User to initiate a Worker in a new chat.
-      3. Master RESUMES only after receiving `docs/agent/exchange/inbox/result_[ID].md`.
-      4. Master MUST move the processed `task_[ID].md` and `result_[ID].md` to the `archive/` folder to maintain clean state.
-      5. FALLBACK PROTOCOL: If the Worker's `result_[ID].md` is inconclusive or empty, the Master MUST NOT hallucinate the missing data. Action: Generate `task_[ID]_retry.md` with new search parameters OR stop and request User intervention.
+      1. Master defines the problem: Code it directly OR Delegate data mining OR Delegate massive refactoring.
+      2. Master creates `outbox/task_[ID].yaml` specifying the target_tool (`gemini-cli` or `jules`).
+      3. Master PAUSES and explicitly waits for `inbox/result_[ID].yaml`.
+      4. Master consumes minified data, deletes inbox/outbox files, and proceeds with coding.
     </DELEGATION_CONTROLS>
 
     <TASK_MANIFEST_TEMPLATE>
-      When creating a task for a Worker, use this strict structure:
-      # Task [ID]
-      - ROLE: [Specific sub-role, e.g., QA_TESTER, LOG_PARSER]
-      - OBJECTIVE: [Clear, single-focus goal]
-      - INPUT_FILES: [Exact paths to read]
-      - OUTPUT_FORMAT: [Expected structure of result_[ID].md]
-      - CONSTRAINTS: [e.g., "Do not modify source files", "Only report exact line numbers"]
+      Strict YAML format to save tokens.
+      ---
+      task_id: [ID]
+      target_tool: [GEMINI_CLI | JULES]
+      action: [PARSE_LOGS | READ_DOCS | REFACTOR]
+      input: [file_paths, log snippet, or MCP command]
+      compression_rule: [e.g., "Return ONLY exact API signatures", "Return ONLY strict diff"]
     </TASK_MANIFEST_TEMPLATE>
 
+    <DATA_COMPRESSION_PROTOCOL>
+      1. PROTECT_MASTER_CONTEXT: Master Orchestrator tokens are premium. Workers MUST NEVER send raw logs or full files to inbox.
+      2. FORMAT: Workers respond in flat YAML or bullet points. Max 15 lines.
+      3. LOGS: Return exact error line and root cause.
+      4. DOCS: Return exact API endpoints/signatures.
+    </DATA_COMPRESSION_PROTOCOL>
+    
     <MEMORY_ROTATION>
-      When `docs/agent/_core/HISTORY.md` becomes too long or a sprint concludes, the Master MUST rotate it:
-      1. Move the current `HISTORY.md` to `docs/agent/exchange/archive/HISTORY_phase_[X].md`.
-      2. Create a new, empty `HISTORY.md` in `_core/`.
-      Do not keep archived history files in the active context window.
+      HISTORY.md must ONLY contain a bulleted list of completed Task IDs and 1-line state changes.
+      Workers read NOTHING from _core/.
+      Master reads ONLY the current sprint and GLOBAL_STATE.
+      Once a sprint item is checked off, drop its context entirely.
     </MEMORY_ROTATION>
-
-    <SELF_IMPROVEMENT_LOOP>
-      Any user correction must be recorded in `docs/agent/_core/LESSONS.md`.
-      This file must be reviewed by the Master Orchestrator at the start of every session.
-    </SELF_IMPROVEMENT_LOOP>
   </MULTI_AGENT_SYNC_PROTOCOL>
 
   <ACTION_PROTOCOL>
@@ -95,19 +100,15 @@
     </SAFETY_FIRST>
     
     <CODE_EDITING_STANDARD>
-      <NO_PLACEHOLDERS>Never use comments like `// ... existing code ...` or `// ... rest of file`. Write exact, complete, and copy-pasteable blocks.</NO_PLACEHOLDERS>
-      <DIFF_STRICTNESS>When applying changes, provide the exact target lines or a strict SEARCH/REPLACE block. Do not truncate code.</DIFF_STRICTNESS>
+      <NO_PLACEHOLDERS>Forbidden: `// existing code`.</NO_PLACEHOLDERS>
+      <DIFF_ONLY>
+        For large files, output strict SEARCH/REPLACE blocks to conserve output tokens.
+        <<<< SEARCH
+        [exact lines to replace]
+        ====
+        [new lines]
+        >>>> REPLACE
+      </DIFF_ONLY>
     </CODE_EDITING_STANDARD>
-
-    <ATOMIC_OPERATIONS>
-      1. LOGS: NEVER overwrite active `HISTORY.md` or `sprints/*.md`. ONLY APPEND.
-      2. MINIMAL IMPACT: Make changes as simple as possible. Touch minimal code.
-    </ATOMIC_OPERATIONS>
-    
-    <EXIT_SEQUENCE>
-      1. VERIFICATION: Never mark complete without proving it works. Run tests, diff behavior.
-      2. "Would a staff engineer approve this?" validation.
-      3. APPEND to `docs/agent/_core/HISTORY.md` and tick off items in `current.md`.
-    </EXIT_SEQUENCE>
   </ACTION_PROTOCOL>
 </USER_RULES>
