@@ -24,7 +24,7 @@
     </TOOLS>
   </CRITICAL_DIRECTIVES>
 
-  <SWARM_TOPOLOGY_V5_7>
+  <SWARM_TOPOLOGY_V5_8>
     <SESSION_INIT>
       Read [docs/agent/_core/GLOBAL_STATE.md](file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/GLOBAL_STATE.md) and [docs/agent/sprints/current.md](file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/sprints/current.md).
       Assume MASTER_CODER role by default.
@@ -33,6 +33,7 @@
     <MASTER_CODER>
       - TOOL: Antigravity.
       - ROLE: Lead Engineer & Architect. Writes core logic, makes architectural decisions.
+      - WORKER_MODE: Can act as a High-Privilege Worker for local tasks (testing, run_command, etc.) via `exchange/outbox/` YAML manifest.
       - CONSTRAINT: Token arbitrage. STRICTLY FORBIDDEN from reading raw logs >50 lines. Must delegate heavy reading to DATA_MINER and heavy coding to CODE_SURGEON.
     </MASTER_CODER>
 
@@ -49,7 +50,7 @@
       - TRIGGER: Reads `docs/agent/exchange/outbox/task_[ID].yaml` directly from repository.
       - BATCH_SURGERY: Maximize quota efficiency. Batch multiple complex file changes into a single session. Avoid single-file or <100 LOC tasks.
     </CODE_SURGEON>
-  </SWARM_TOPOLOGY_V5_7>
+  </SWARM_TOPOLOGY_V5_8>
 
   <MULTI_AGENT_SYNC_PROTOCOL>
     <DATA_BUS_STRUCTURE>
@@ -63,19 +64,17 @@
     
     <DELEGATION_CONTROLS>
       1. Master defines the problem in `outbox/task_[ID].yaml`. 
-      2. Master PUSHES manifest to Git.
-      3. User triggers Jules UI: "Execute task_[ID].yaml from the repository".
-      4. Jules implements, writes `inbox/result_[ID].yaml`, and PUSHES code + report to Git.
-      5. User PULLS changes.
-      6. Master consumes data, applies changes, deletes inbox/outbox files, and proceeds.
+      2. If target is ANTIGRAVITY: Master executes locally and writes to `inbox/result_[ID].yaml`.
+      3. If target is JULES: Master PUSHES manifest to Git. User triggers Jules UI: "Execute task_[ID].yaml from the repository". Jules implements, writes `inbox/result_[ID].yaml`, and PUSHES code + report to Git. User PULLS changes.
+      4. Master consumes data from `inbox/result_[ID].yaml`, applies changes, deletes inbox/outbox files, and proceeds.
     </DELEGATION_CONTROLS>
 
     <TASK_MANIFEST_TEMPLATE>
       Strict YAML format to save tokens.
       ---
       task_id: [ID]
-      target_tool: [GEMINI_CLI | JULES]
-      action: [PARSE_LOGS | READ_DOCS | REFACTOR | IMPLEMENT]
+      target_tool: [GEMINI_CLI | JULES | ANTIGRAVITY]
+      action: [PARSE_LOGS | READ_DOCS | REFACTOR | IMPLEMENT | TEST]
       input: [file_paths, log snippet, or MCP command]
       compression_rule: [e.g., "Return ONLY exact API signatures", "Return ONLY strict diff"]
     </TASK_MANIFEST_TEMPLATE>
