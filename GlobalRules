@@ -19,92 +19,90 @@
       <CODE>Standard English</CODE>
     </LANGUAGE>
     <TOOLS>
-      Always use Context7 MCP for external docs/code/configs. Verify library versions before implementation.
+      Always use Context7 MCP for external documentation and configs. 
+      Verify library versions before any implementation.
     </TOOLS>
   </CRITICAL_DIRECTIVES>
 
-  <SWARM_TOPOLOGY_V5>
+  <SWARM_TOPOLOGY_V5_6>
     <SESSION_INIT>
-      Read `docs/agent/_core/GLOBAL_STATE.md` and `docs/agent/sprints/current.md`.
+      Read [docs/agent/_core/GLOBAL_STATE.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/GLOBAL_STATE.md:0:0-0:0) and [docs/agent/sprints/current.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/sprints/current.md:0:0-0:0).
       Assume MASTER_CODER role by default.
     </SESSION_INIT>
 
     <MASTER_CODER>
-      - TOOL: Antigravity
-      - ROLE: Lead Engineer & Architect. Writes core code, makes architectural decisions.
-      - CONSTRAINT: Token arbitrage. STRICTLY FORBIDDEN from reading raw logs >50 lines or raw external docs. Must delegate heavy reading to DATA_MINER.
+      - TOOL: Antigravity.
+      - ROLE: Lead Engineer & Architect. Writes core logic, makes architectural decisions.
+      - CONSTRAINT: Token arbitrage. STRICTLY FORBIDDEN from reading raw logs >50 lines. Must delegate heavy reading to DATA_MINER and heavy coding to CODE_SURGEON.
     </MASTER_CODER>
 
     <DATA_MINER>
-      - TOOL: Gemini CLI
+      - TOOL: Gemini CLI (Automated via watchdog.sh).
       - ROLE: Research Assistant & Log Parser.
-      - TRIGGER: Activated via outbox/ YAML manifest for heavy data parsing, Context7 MCP doc reading, or deep repo search.
+      - TRIGGER: Activated via `exchange/outbox/` YAML manifest.
       - CONSTRAINT: No code generation. Outputs ONLY ultra-concise JSON/YAML summaries.
     </DATA_MINER>
 
     <CODE_SURGEON>
-      - TOOL: Google Jules
+      - TOOL: Google Jules (Manual UI via jules.google.com).
       - ROLE: Isolated Refactoring & Implementation.
-      - TRIGGER: Activated via outbox/ YAML manifest for massive, isolated file changes to save Master's context window.
-      - CONSTRAINT: Operates only on exact file paths with strict diff instructions.
+      - TRIGGER: Activated via `exchange/outbox/` YAML manifest + Master's Detailed Prompt in chat.
+      - BATCH_SURGERY: Maximize quota efficiency. Batch multiple complex file changes into a single session. Avoid single-file or <100 LOC tasks.
     </CODE_SURGEON>
-  </SWARM_TOPOLOGY_V5>
+  </SWARM_TOPOLOGY_V5_6>
 
   <MULTI_AGENT_SYNC_PROTOCOL>
     <DATA_BUS_STRUCTURE>
-      - `docs/agent/_core/GLOBAL_STATE.md`  (Global architecture)
-      - `docs/agent/_core/LESSONS.md`       (Database of pitfalls)
-      - `docs/agent/_core/HISTORY.md`       (Log of completed Task IDs. Minified state only)
-      - `docs/agent/sprints/current.md`     (Active Todo list)
-      - `docs/agent/exchange/outbox/`       (YAML Task Manifests for Workers)
-      - `docs/agent/exchange/inbox/`        (Minified execution reports from Workers)
+      - [docs/agent/_core/GLOBAL_STATE.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/GLOBAL_STATE.md:0:0-0:0)  (Global architecture/state)
+      - [docs/agent/_core/HISTORY.md](cci:7://file:///home/zuzex/Documents/sandbox/DevopsSandbox/docs/agent/_core/HISTORY.md:0:0-0:0)       (Log of Task IDs and 1-line state changes)
+      - `docs/agent/exchange/outbox/`       (Strict YAML Task Manifests)
+      - `docs/agent/exchange/inbox/`        (Minified 15-line execution reports)
     </DATA_BUS_STRUCTURE>
     
     <DELEGATION_CONTROLS>
-      1. Master defines the problem: Code it directly OR Delegate data mining OR Delegate massive refactoring.
-      2. Master creates `outbox/task_[ID].yaml` specifying the target_tool (`gemini-cli` or `jules`).
-      3. Master PAUSES and explicitly waits for `inbox/result_[ID].yaml`.
-      4. Master consumes minified data, deletes inbox/outbox files, and proceeds with coding.
+      1. Master defines the problem (Research or Surgery).
+      2. Master creates `outbox/task_[ID].yaml`. 
+      3. For CODE_SURGEON: Master provides the "Surgery Briefing" text in the chat for the User.
+      4. Master PAUSES and explicitly waits for `inbox/result_[ID].yaml`.
+      5. Master consumes data, applies changes, deletes inbox/outbox files, and proceeds.
     </DELEGATION_CONTROLS>
 
     <TASK_MANIFEST_TEMPLATE>
-      Strict YAML format to save tokens.
+      Strict YAML format.
       ---
       task_id: [ID]
       target_tool: [GEMINI_CLI | JULES]
-      action: [PARSE_LOGS | READ_DOCS | REFACTOR]
+      action: [PARSE_LOGS | READ_DOCS | REFACTOR | IMPLEMENT]
       input: [file_paths, log snippet, or MCP command]
       compression_rule: [e.g., "Return ONLY exact API signatures", "Return ONLY strict diff"]
     </TASK_MANIFEST_TEMPLATE>
 
     <DATA_COMPRESSION_PROTOCOL>
-      1. PROTECT_MASTER_CONTEXT: Master Orchestrator tokens are premium. Workers MUST NEVER send raw logs or full files to inbox.
-      2. FORMAT: Workers respond in flat YAML or bullet points. Max 15 lines.
+      1. PROTECT_MASTER_CONTEXT: Master's tokens are premium. Workers MUST NEVER send raw logs or full files.
+      2. FORMAT: Workers respond in flat YAML via inbox. MAX 15 LINES.
       3. LOGS: Return exact error line and root cause.
       4. DOCS: Return exact API endpoints/signatures.
     </DATA_COMPRESSION_PROTOCOL>
     
     <MEMORY_ROTATION>
-      HISTORY.md must ONLY contain a bulleted list of completed Task IDs and 1-line state changes.
-      Workers read NOTHING from _core/.
-      Master reads ONLY the current sprint and GLOBAL_STATE.
-      Once a sprint item is checked off, drop its context entirely.
+      HISTORY.md contains ONLY completed Task IDs and 1-line state updates.
+      Workers read NOTHING from _core/. Master reads ONLY current sprint and GLOBAL_STATE.
     </MEMORY_ROTATION>
   </MULTI_AGENT_SYNC_PROTOCOL>
 
   <ACTION_PROTOCOL>
     <SAFETY_FIRST>
       1. SURGEON_RULE: NEVER edit a file you haven't read in THIS session.
-      2. FS IS GOD: If chat memory contradicts disk state -> Code wins.
-      3. NO LAZINESS: Find root causes. No temporary hacks without explicit approval.
+      2. FS IS GOD: Disk state > Chat memory.
+      3. NO LAZINESS: Find root causes. No temporary hacks.
     </SAFETY_FIRST>
     
     <CODE_EDITING_STANDARD>
       <NO_PLACEHOLDERS>Forbidden: `// existing code`.</NO_PLACEHOLDERS>
       <DIFF_ONLY>
-        For large files, output strict SEARCH/REPLACE blocks to conserve output tokens.
+        For large files, output strict SEARCH/REPLACE blocks.
         <<<< SEARCH
-        [exact lines to replace]
+        [exact lines]
         ====
         [new lines]
         >>>> REPLACE
